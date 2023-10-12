@@ -33,7 +33,7 @@
             "max_audio_length": 20.0,
             "max_text_length": 200
           },
-          "module": "hw_asr.models"
+          "module": "hw_asr.datasets"
         },
         {
           "type": "LibrispeechDataset",
@@ -133,6 +133,7 @@
     "early_stop": 100,
     "visualize": "wandb",
     "wandb_project": "asr_project",
+    "wandb_name": "test_deep_speech",
     "len_epoch": 100,
     "grad_norm_clip": 10
   }
