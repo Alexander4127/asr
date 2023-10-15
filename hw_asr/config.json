@@ -1,5 +1,5 @@
 {
-  "name": "default_config",
+  "name": "default_ds",
   "n_gpu": 1,
   "preprocessing": {
     "sr": 16000,
@@ -15,15 +15,34 @@
     "spectrogram": []
   },
   "arch": {
-    "type": "BaselineModel",
+    "type": "DeepSpeechModel",
     "args": {
       "n_feats": 128,
-      "fc_hidden": 512
+      "conv_params": [
+        {
+          "in_channels": 1,
+          "out_channels": 32,
+          "kernel_size": [41, 11],
+          "stride": [2, 2]
+        },
+        {
+          "in_channels": 32,
+          "out_channels": 32,
+          "kernel_size": [21, 11],
+          "stride": [2, 2]
+        }
+      ],
+      "rnn_params": {
+        "num_rnn": 2,
+        "rnn_hid": 128,
+        "bi": true,
+        "bn": true
+      }
     }
   },
-  "data": {
+    "data": {
     "train": {
-      "batch_size": 50,
+      "batch_size": 10,
       "num_workers": 5,
       "datasets": [
         {
@@ -34,45 +53,17 @@
             "max_text_length": 200
           },
           "module": "hw_asr.datasets"
-        },
-        {
-          "type": "LibrispeechDataset",
-          "args": {
-            "part": "train-clean-360",
-            "max_audio_length": 20.0,
-            "max_text_length": 200
-          }
-        },
-        {
-          "type": "LibrispeechDataset",
-          "args": {
-            "part": "train-other-500",
-            "max_audio_length": 20.0,
-            "max_text_length": 200
-          }
         }
       ]
     },
     "val": {
-      "batch_size": 30,
+      "batch_size": 10,
       "num_workers": 5,
       "datasets": [
         {
           "type": "LibrispeechDataset",
           "args": {
             "part": "dev-clean"
-          }
-        }
-      ]
-    },
-    "test-other": {
-      "batch_size": 30,
-      "num_workers": 5,
-      "datasets": [
-        {
-          "type": "LibrispeechDataset",
-          "args": {
-            "part": "test-other"
           }
         }
       ]
@@ -133,7 +124,7 @@
     "early_stop": 100,
     "visualize": "wandb",
     "wandb_project": "asr_project",
-    "wandb_name": "test_deep_speech",
+    "wandb_name": "default_deep_speech",
     "len_epoch": 100,
     "grad_norm_clip": 10
   }
