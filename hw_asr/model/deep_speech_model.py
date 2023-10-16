@@ -10,7 +10,7 @@ from hw_asr.base import BaseModel
 
 
 class RNNLayer(nn.Module):
-    def __init__(self, n_feat, rnn_hid, rnn=nn.LSTM, bi=True, bn=True, **kwargs):
+    def __init__(self, n_feat, rnn_hid, rnn=nn.GRU, bi=True, bn=True, **kwargs):
         super().__init__()
         self.n_feat = n_feat
         self.rnn_hid = rnn_hid
