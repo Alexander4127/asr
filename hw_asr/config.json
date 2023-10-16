@@ -54,21 +54,11 @@
         {
           "type": "LibrispeechDataset",
           "args": {
-            "data_dir": "/kaggle/input/librispeech-asr-wav-dataset",
             "part": "train-clean-100",
             "max_audio_length": 20.0,
             "max_text_length": 200
           },
           "module": "hw_asr.datasets"
-        },
-        {
-          "type": "LibrispeechDataset",
-          "args": {
-            "data_dir": "/kaggle/input/librispeech-asr-wav-dataset",
-            "part": "train-clean-360",
-            "max_audio_length": 20.0,
-            "max_text_length": 200
-          }
         }
       ]
     },
@@ -79,7 +69,6 @@
         {
           "type": "LibrispeechDataset",
           "args": {
-            "data_dir": "/kaggle/input/librispeech-asr-wav-dataset",
             "part": "dev-clean"
           }
         }
@@ -92,7 +81,6 @@
         {
           "type": "LibrispeechDataset",
           "args": {
-            "data_dir": "/kaggle/input/librispeech-asr-wav-dataset",
             "part": "test-clean"
           }
         }
