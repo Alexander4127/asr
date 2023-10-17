@@ -39,7 +39,7 @@
         }
       ],
       "rnn_params": {
-        "num_rnn": 5,
+        "num_rnn": 7,
         "rnn_hid": 512,
         "bi": true,
         "bn": true
@@ -48,13 +48,12 @@
   },
     "data": {
     "train": {
-      "batch_size": 64,
+      "batch_size": 32,
       "num_workers": 5,
       "datasets": [
         {
           "type": "LibrispeechDataset",
           "args": {
-            "data_dir": "/kaggle/input/librispeech-asr-wav-dataset",
             "part": "train-clean-100",
             "max_audio_length": 20.0,
             "max_text_length": 200
@@ -64,8 +63,15 @@
         {
           "type": "LibrispeechDataset",
           "args": {
-            "data_dir": "/kaggle/input/librispeech-asr-wav-dataset",
             "part": "train-clean-360",
+            "max_audio_length": 20.0,
+            "max_text_length": 200
+          }
+        },
+        {
+          "type": "LibrispeechDataset",
+          "args": {
+            "part": "train-other-500",
             "max_audio_length": 20.0,
             "max_text_length": 200
           }
@@ -73,26 +79,24 @@
       ]
     },
     "val": {
-      "batch_size": 64,
+      "batch_size": 32,
       "num_workers": 5,
       "datasets": [
         {
           "type": "LibrispeechDataset",
           "args": {
-            "data_dir": "/kaggle/input/librispeech-asr-wav-dataset",
             "part": "dev-clean"
           }
         }
       ]
     },
     "test-clean": {
-      "batch_size": 64,
+      "batch_size": 32,
       "num_workers": 5,
       "datasets": [
         {
           "type": "LibrispeechDataset",
           "args": {
-            "data_dir": "/kaggle/input/librispeech-asr-wav-dataset",
             "part": "test-clean"
           }
         }
@@ -127,7 +131,7 @@
     "type": "StepLR",
     "args": {
       "step_size": 1000,
-      "gamma": 0.8
+      "gamma": 0.9
     }
   },
   "trainer": {
@@ -139,7 +143,7 @@
     "early_stop": 100,
     "visualize": "wandb",
     "wandb_project": "asr_project",
-    "wandb_name": "large_deep_speech",
+    "wandb_name": "all_data_deep_speech",
     "len_epoch": 100,
     "grad_norm_clip": 10
   }
