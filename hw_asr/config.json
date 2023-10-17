@@ -144,7 +144,8 @@
     "visualize": "wandb",
     "wandb_project": "asr_project",
     "wandb_name": "all_data_deep_speech",
-    "len_epoch": 100,
+    "len_epoch": 500,
+    "log_step": 100,
     "grad_norm_clip": 10
   }
 }

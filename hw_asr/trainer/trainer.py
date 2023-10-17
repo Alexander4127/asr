@@ -117,6 +117,7 @@ class Trainer(BaseTrainer):
                 )
                 self._log_predictions(**batch)
                 self._log_spectrogram(batch["spectrogram"])
+                self._log_audio(**batch)
                 self._log_scalars(self.train_metrics)
                 # we don't want to reset train metrics at the start of every epoch
                 # because we are interested in recent train metrics
@@ -260,3 +261,7 @@ class Trainer(BaseTrainer):
             return
         for metric_name in metric_tracker.keys():
             self.writer.add_scalar(f"{metric_name}", metric_tracker.avg(metric_name))
+
+    def _log_audio(self):
+        if self.writer is None:
+            return
