@@ -41,7 +41,7 @@ class CTCCharTextEncoder(CharTextEncoder):
         for next_char_idx, next_char_prob in enumerate(frame):
             for (pref, last_char), pref_prob in state.items():
                 next_char = self.ind2char[next_char_idx]
-                new_pref = pref + next_char if next_char != last_char or next_char == self.EMPTY_TOK else pref
+                new_pref = pref if next_char != last_char or next_char == self.EMPTY_TOK else pref + next_char
                 new_state[(new_pref, next_char)] += pref_prob * next_char_prob
         return dict(new_state)
 
