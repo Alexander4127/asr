@@ -90,7 +90,8 @@
         {
           "type": "LibrispeechDataset",
           "args": {
-            "part": "dev-clean"
+            "part": "dev-clean",
+            "limit": 1000
           }
         }
       ]
@@ -102,7 +103,8 @@
         {
           "type": "LibrispeechDataset",
           "args": {
-            "part": "test-clean"
+            "part": "test-clean",
+            "limit": 1000
           }
         }
       ]
@@ -114,7 +116,8 @@
         {
           "type": "LibrispeechDataset",
           "args": {
-            "part": "test-other"
+            "part": "test-other",
+            "limit": 1000
           }
         }
       ]
