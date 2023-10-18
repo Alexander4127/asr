@@ -269,7 +269,8 @@ class Trainer(BaseTrainer):
         idx = np.random.choice(np.arange(len(spectrogram_batch)))
         spectrogram = spectrogram_batch.cpu()[idx]
         image = PIL.Image.open(plot_spectrogram_to_buf(spectrogram))
-        desc = "spectrogram" + "" if spec_aug_names is None else f"(spec aug: {spec_aug_names[idx]})"
+        desc = "spectrogram" + "" if spec_aug_names is None or not spec_aug_names[idx] \
+            else f"(spec aug: {spec_aug_names[idx]})"
         self.writer.add_image(desc, ToTensor()(image))
 
     @torch.no_grad()
