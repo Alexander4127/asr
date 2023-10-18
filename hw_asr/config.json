@@ -1,5 +1,5 @@
 {
-  "name": "large_ds",
+  "name": "decr_ds",
   "n_gpu": 1,
   "preprocessing": {
     "sr": 16000,
@@ -13,19 +13,17 @@
   "augmentations": {
     "wave": [
       {
-        "type": "GaussianNoise",
-        "args": {
-          "sigma": 0.001
-        }
-      }
-    ],
-    "spectrogram": [
-      {
         "type": "PitchShift",
         "args": {"sample_rate": 16000}
       }
     ],
-    "p": 0.1
+    "spectrogram": [
+      {
+        "type": "TimeStretching",
+        "args": {"n_feat": 128}
+      }
+    ],
+    "p": 0.05
   },
   "arch": {
     "type": "DeepSpeechModel",
@@ -46,8 +44,8 @@
         }
       ],
       "rnn_params": {
-        "num_rnn": 3,
-        "rnn_hid": 16,
+        "num_rnn": 5,
+        "rnn_hid": 512,
         "bi": true,
         "bn": true
       }
@@ -66,6 +64,22 @@
             "max_text_length": 200
           },
           "module": "hw_asr.datasets"
+        },
+        {
+          "type": "LibrispeechDataset",
+          "args": {
+            "part": "train-clean-360",
+            "max_audio_length": 20.0,
+            "max_text_length": 200
+          }
+        },
+        {
+          "type": "LibrispeechDataset",
+          "args": {
+            "part": "train-other-500",
+            "max_audio_length": 20.0,
+            "max_text_length": 200
+          }
         }
       ]
     },
@@ -89,6 +103,18 @@
           "type": "LibrispeechDataset",
           "args": {
             "part": "test-clean"
+          }
+        }
+      ]
+    },
+    "test-other": {
+      "batch_size": 32,
+      "num_workers": 5,
+      "datasets": [
+        {
+          "type": "LibrispeechDataset",
+          "args": {
+            "part": "test-other"
           }
         }
       ]
@@ -134,9 +160,9 @@
     "early_stop": 100,
     "visualize": "wandb",
     "wandb_project": "asr_project",
-    "wandb_name": "all_data_decreased_ds",
-    "len_epoch": 10,
-    "log_step": 5,
+    "wandb_name": "all_data_decrease_ds",
+    "len_epoch": 500,
+    "log_step": 100,
     "beam_size": 30,
     "grad_norm_clip": 10
   }
