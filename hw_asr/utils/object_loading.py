@@ -17,10 +17,10 @@ def get_dataloaders(configs: ConfigParser, text_encoder: BaseTextEncoder):
 
         # set train augmentations
         if split == 'train':
-            wave_augs, spec_augs = hw_asr.augmentations.from_configs(configs)
+            wave_augs, spec_augs, aug_prob = hw_asr.augmentations.from_configs(configs)
             drop_last = True
         else:
-            wave_augs, spec_augs = None, None
+            wave_augs, spec_augs, aug_prob = None, None, None
             drop_last = False
 
         # create and join datasets
@@ -28,7 +28,7 @@ def get_dataloaders(configs: ConfigParser, text_encoder: BaseTextEncoder):
         for ds in params["datasets"]:
             datasets.append(configs.init_obj(
                 ds, hw_asr.datasets, text_encoder=text_encoder, config_parser=configs,
-                wave_augs=wave_augs, spec_augs=spec_augs))
+                wave_augs=wave_augs, spec_augs=spec_augs, aug_prob=aug_prob))
         assert len(datasets)
         if len(datasets) > 1:
             dataset = ConcatDataset(datasets)

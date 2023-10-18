@@ -11,8 +11,21 @@
     "log_spec": true
   },
   "augmentations": {
-    "wave": [],
-    "spectrogram": []
+    "wave": [
+      {
+        "type": "GaussianNoise",
+        "args": {
+          "sigma": 0.001
+        }
+      }
+    ],
+    "spectrogram": [
+      {
+        "type": "PitchShift",
+        "args": {"sample_rate": 16000}
+      }
+    ],
+    "p": 0.1
   },
   "arch": {
     "type": "DeepSpeechModel",
@@ -30,16 +43,10 @@
           "out_channels": 32,
           "kernel_size": [21, 11],
           "stride": [2, 1]
-        },
-        {
-          "in_channels": 32,
-          "out_channels": 96,
-          "kernel_size": [21, 11],
-          "stride": [2, 1]
         }
       ],
       "rnn_params": {
-        "num_rnn": 7,
+        "num_rnn": 5,
         "rnn_hid": 512,
         "bi": true,
         "bn": true
@@ -101,6 +108,18 @@
           }
         }
       ]
+    },
+    "test-other": {
+      "batch_size": 32,
+      "num_workers": 5,
+      "datasets": [
+        {
+          "type": "LibrispeechDataset",
+          "args": {
+            "part": "test-other"
+          }
+        }
+      ]
     }
   },
   "optimizer": {
@@ -131,11 +150,11 @@
     "type": "StepLR",
     "args": {
       "step_size": 1000,
-      "gamma": 0.9
+      "gamma": 0.98
     }
   },
   "trainer": {
-    "epochs": 50,
+    "epochs": 1000,
     "save_dir": "saved/",
     "save_period": 5,
     "verbosity": 2,
@@ -143,9 +162,10 @@
     "early_stop": 100,
     "visualize": "wandb",
     "wandb_project": "asr_project",
-    "wandb_name": "all_data_deep_speech",
+    "wandb_name": "test_project",
     "len_epoch": 500,
     "log_step": 100,
+    "beam_size": 30,
     "grad_norm_clip": 10
   }
 }

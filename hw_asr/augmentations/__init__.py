@@ -21,7 +21,12 @@ def from_configs(configs: ConfigParser):
             spec_augs.append(
                 configs.init_obj(aug_dict, hw_asr.augmentations.spectrogram_augmentations)
             )
-    return _to_function(wave_augs), _to_function(spec_augs)
+
+    aug_prob = 0.1
+    if "augmentations" in configs.config and "p" in configs.config["augmentations"]:
+        aug_prob = configs.config["augmentations"]["p"]
+
+    return _to_function(wave_augs), _to_function(spec_augs), aug_prob
 
 
 def _to_function(augs_list: List[Callable]):

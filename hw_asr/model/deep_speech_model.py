@@ -21,6 +21,8 @@ class RNNLayer(nn.Module):
 
     def forward(self, x, lengths, hid=None):
         assert len(x.shape) == 3 and x.shape[2] == self.n_feat, f'{x.shape}[2] != {self.n_feat}'  # (B, T, H)
+        logger = logging.getLogger()
+        logger.info(f'{lengths}')
         if self.batch_norm is not None:
             x = self.relu(self.batch_norm(x.transpose(1, 2)).transpose(1, 2))  # (B, T, H)
         b, t, h = x.shape

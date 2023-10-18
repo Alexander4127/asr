@@ -10,6 +10,7 @@ from torch.utils.data import Dataset
 
 from hw_asr.base.base_text_encoder import BaseTextEncoder
 from hw_asr.utils.parse_config import ConfigParser
+from hw_asr.augmentations.random_apply import RandomApply
 
 logger = logging.getLogger(__name__)
 
@@ -22,14 +23,15 @@ class BaseDataset(Dataset):
             config_parser: ConfigParser,
             wave_augs=None,
             spec_augs=None,
+            aug_prob=None,
             limit=None,
             max_audio_length=None,
-            max_text_length=None,
+            max_text_length=None
     ):
         self.text_encoder = text_encoder
         self.config_parser = config_parser
-        self.wave_augs = wave_augs
-        self.spec_augs = spec_augs
+        self.wave_augs = RandomApply(wave_augs, p=aug_prob)
+        self.spec_augs = RandomApply(spec_augs, p=aug_prob)
         self.log_spec = config_parser["preprocessing"]["log_spec"]
 
         self._assert_index_is_valid(index)
@@ -43,10 +45,12 @@ class BaseDataset(Dataset):
         data_dict = self._index[ind]
         audio_path = data_dict["path"]
         audio_wave = self.load_audio(audio_path)
-        audio_wave, audio_spec = self.process_wave(audio_wave)
+        wave_augments, spec_augments, audio_wave, audio_spec = self.process_wave(audio_wave)
         return {
             "audio": audio_wave,
             "spectrogram": audio_spec,
+            "wave_aug_names": wave_augments,
+            "spec_aug_names": spec_augments,
             "duration": audio_wave.size(1) / self.config_parser["preprocessing"]["sr"],
             "text": data_dict["text"],
             "text_encoded": self.text_encoder.encode(data_dict["text"]),
@@ -70,18 +74,22 @@ class BaseDataset(Dataset):
 
     def process_wave(self, audio_tensor_wave: Tensor):
         with torch.no_grad():
+            wave_augments = ""
             if self.wave_augs is not None:
-                audio_tensor_wave = self.wave_augs(audio_tensor_wave)
+                suc, audio_tensor_wave = self.wave_augs(audio_tensor_wave)
+                wave_augments = wave_augments if not suc else repr(self.wave_augs)
             wave2spec = self.config_parser.init_obj(
                 self.config_parser["preprocessing"]["spectrogram"],
                 torchaudio.transforms,
             )
             audio_tensor_spec = wave2spec(audio_tensor_wave)
+            spec_augments = ""
             if self.spec_augs is not None:
-                audio_tensor_spec = self.spec_augs(audio_tensor_spec)
+                suc, audio_tensor_spec = self.spec_augs(audio_tensor_spec)
+                spec_augments = spec_augments if not suc else repr(self.spec_augs)
             if self.log_spec:
                 audio_tensor_spec = torch.log(audio_tensor_spec + 1e-5)
-            return audio_tensor_wave, audio_tensor_spec
+            return wave_augments, spec_augments, audio_tensor_wave, audio_tensor_spec
 
     @staticmethod
     def _filter_records_from_dataset(

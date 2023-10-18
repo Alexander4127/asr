@@ -14,3 +14,6 @@ class SequentialAugmentation(AugmentationBase):
         for augmentation in self.augmentation_list:
             x = augmentation(x)
         return x
+
+    def __repr__(self):
+        return ", ".join([repr(aug) for aug in self.augmentation_list])
