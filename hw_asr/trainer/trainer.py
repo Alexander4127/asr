@@ -121,7 +121,7 @@ class Trainer(BaseTrainer):
                     "learning rate", self.lr_scheduler.get_last_lr()[0]
                 )
                 self._log_predictions(**batch)
-                self._log_spectrogram(batch["spectrogram"])
+                self._log_spectrogram(batch["spectrogram"], batch["spec_aug_names"])
                 self._log_audio(**batch)
                 self._log_scalars(self.train_metrics)
                 # we don't want to reset train metrics at the start of every epoch
@@ -265,10 +265,12 @@ class Trainer(BaseTrainer):
             }
         self.writer.add_table("beam_predictions", pd.DataFrame.from_dict(rows, orient="index"))
 
-    def _log_spectrogram(self, spectrogram_batch):
-        spectrogram = random.choice(spectrogram_batch.cpu())
+    def _log_spectrogram(self, spectrogram_batch, spec_aug_names=None):
+        idx = np.random.choice(np.arange(len(spectrogram_batch)))
+        spectrogram = spectrogram_batch.cpu()[idx]
         image = PIL.Image.open(plot_spectrogram_to_buf(spectrogram))
-        self.writer.add_image("spectrogram", ToTensor()(image))
+        desc = "spectrogram" + "" if spec_aug_names is None else f"(spec aug: {spec_aug_names[idx]})"
+        self.writer.add_image(desc, ToTensor()(image))
 
     @torch.no_grad()
     def get_grad_norm(self, norm_type=2):
@@ -290,9 +292,10 @@ class Trainer(BaseTrainer):
         for metric_name in metric_tracker.keys():
             self.writer.add_scalar(f"{metric_name}", metric_tracker.avg(metric_name))
 
-    def _log_audio(self, audio_path, **kwargs):
+    def _log_audio(self, audio, audio_path, wave_aug_names, **kwargs):
         if self.writer is None:
             return
-        idx = np.random.choice(np.arange(len(audio_path)))
+        idx = np.random.choice(np.arange(len(wave_aug_names)))
         t_info = torchaudio.info(audio_path[idx])
-
+        desc = "audio" + "" if not wave_aug_names[idx] else f'(aug: {wave_aug_names[idx]})'
+        self.writer.add_audio(desc, audio[idx], t_info.sample_rate)
