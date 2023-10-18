@@ -1,3 +1,4 @@
+import logging
 from typing import List, NamedTuple, Dict, Any, Tuple
 from collections import defaultdict
 
@@ -46,7 +47,7 @@ class CTCCharTextEncoder(CharTextEncoder):
 
     @staticmethod
     def _truncate(state, beam_size) -> Dict[Tuple[str, str], float]:
-        state_list = list(state.items()).sort(key=lambda x: -x[1])
+        state_list = sorted(state.items(), key=lambda x: -x[1])
         return dict(state_list[:beam_size])
 
     def ctc_beam_search(self, probs: torch.tensor, probs_length,
@@ -55,11 +56,12 @@ class CTCCharTextEncoder(CharTextEncoder):
         Performs beam search and returns a list of pairs (hypothesis, hypothesis probability).
         """
         assert len(probs.shape) == 2
+        probs = probs[:probs_length]
         char_length, voc_size = probs.shape
         assert voc_size == len(self.ind2char)
         state: Dict[Tuple[str, str], float] = {('', self.EMPTY_TOK): 1.0}
-        for frame, len_frame in zip(probs, probs_length):
-            state = self._extend_and_merge(frame[:len_frame], state)
+        for frame in probs:
+            state = self._extend_and_merge(frame, state)
             state = self._truncate(state, beam_size)
         hypos: List[Hypothesis] = [Hypothesis(k[0], v) for k, v in state.items()]
         return sorted(hypos, key=lambda x: x.prob, reverse=True)

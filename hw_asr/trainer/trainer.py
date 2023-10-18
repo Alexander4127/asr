@@ -1,10 +1,13 @@
+import logging
 import random
 from pathlib import Path
 from random import shuffle
 
 import PIL
+import numpy as np
 import pandas as pd
 import torch
+import torchaudio
 import torch.nn.functional as F
 from torch.nn.utils import clip_grad_norm_
 from torchvision.transforms import ToTensor
@@ -32,6 +35,7 @@ class Trainer(BaseTrainer):
             device,
             dataloaders,
             text_encoder,
+            beam_size=None,
             lr_scheduler=None,
             len_epoch=None,
             log_step=50,
@@ -40,6 +44,7 @@ class Trainer(BaseTrainer):
         super().__init__(model, criterion, metrics, optimizer, config, device)
         self.skip_oom = skip_oom
         self.text_encoder = text_encoder
+        self.beam_size = beam_size
         self.config = config
         self.train_dataloader = dataloaders["train"]
         if len_epoch is None:
@@ -183,6 +188,7 @@ class Trainer(BaseTrainer):
             self.writer.set_step(epoch * self.len_epoch, part)
             self._log_scalars(self.evaluation_metrics)
             self._log_predictions(**batch)
+            self._log_audio(**batch)
             self._log_spectrogram(batch["spectrogram"])
 
         # add histogram of model parameters to the tensorboard
@@ -210,7 +216,6 @@ class Trainer(BaseTrainer):
             *args,
             **kwargs,
     ):
-        # TODO: implement logging of beam search results
         if self.writer is None:
             return
         argmax_inds = log_probs.cpu().argmax(-1).numpy()
@@ -237,6 +242,29 @@ class Trainer(BaseTrainer):
             }
         self.writer.add_table("predictions", pd.DataFrame.from_dict(rows, orient="index"))
 
+        if self.beam_size is None:
+            return
+
+        batch_idx = np.random.choice(np.arange(len(log_probs)))
+        beam_search_results = self.text_encoder.ctc_beam_search(
+            probs=torch.exp(log_probs[batch_idx]).detach().cpu(),
+            probs_length=log_probs_length[batch_idx].cpu(),
+            beam_size=self.beam_size
+        )
+        rows = {}
+        target = text[batch_idx]
+        for idx, hypot in enumerate(beam_search_results):
+            wer = calc_wer(target, hypot.text) * 100
+            cer = calc_cer(target, hypot.text) * 100
+            rows[idx] = {
+                "target": target,
+                "prediction": hypot.text,
+                "prob": hypot.prob,
+                "wer": wer,
+                "cer": cer,
+            }
+        self.writer.add_table("beam_predictions", pd.DataFrame.from_dict(rows, orient="index"))
+
     def _log_spectrogram(self, spectrogram_batch):
         spectrogram = random.choice(spectrogram_batch.cpu())
         image = PIL.Image.open(plot_spectrogram_to_buf(spectrogram))
@@ -262,6 +290,9 @@ class Trainer(BaseTrainer):
         for metric_name in metric_tracker.keys():
             self.writer.add_scalar(f"{metric_name}", metric_tracker.avg(metric_name))
 
-    def _log_audio(self):
+    def _log_audio(self, audio_path, **kwargs):
         if self.writer is None:
             return
+        idx = np.random.choice(np.arange(len(audio_path)))
+        t_info = torchaudio.info(audio_path[idx])
+

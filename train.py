@@ -61,6 +61,7 @@ def main(config):
         metrics,
         optimizer,
         text_encoder=text_encoder,
+        beam_size=config["trainer"].get("beam_size", None),
         config=config,
         device=device,
         dataloaders=dataloaders,
