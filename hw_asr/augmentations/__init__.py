@@ -22,7 +22,7 @@ def from_configs(configs: ConfigParser):
                 configs.init_obj(aug_dict, hw_asr.augmentations.spectrogram_augmentations)
             )
 
-    aug_prob = 0.1
+    aug_prob = 0.
     if "augmentations" in configs.config and "p" in configs.config["augmentations"]:
         aug_prob = configs.config["augmentations"]["p"]
 

@@ -10,7 +10,7 @@ from hw_asr.base import BaseModel
 
 
 class RNNLayer(nn.Module):
-    def __init__(self, n_feat, rnn_hid, rnn=nn.GRU, bi=True, bn=True, **kwargs):
+    def __init__(self, n_feat, rnn_hid, rnn=nn.LSTM, bi=True, bn=True, **kwargs):
         super().__init__()
         self.n_feat = n_feat
         self.rnn_hid = rnn_hid
@@ -21,8 +21,6 @@ class RNNLayer(nn.Module):
 
     def forward(self, x, lengths, hid=None):
         assert len(x.shape) == 3 and x.shape[2] == self.n_feat, f'{x.shape}[2] != {self.n_feat}'  # (B, T, H)
-        logger = logging.getLogger()
-        logger.info(f'{lengths}')
         if self.batch_norm is not None:
             x = self.relu(self.batch_norm(x.transpose(1, 2)).transpose(1, 2))  # (B, T, H)
         b, t, h = x.shape
