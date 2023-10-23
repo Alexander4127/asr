@@ -1,5 +1,5 @@
 {
-  "name": "decr_ds",
+  "name": "with_augs",
   "n_gpu": 1,
   "preprocessing": {
     "sr": 16000,
@@ -15,12 +15,28 @@
       {
         "type": "PitchShift",
         "args": {"sample_rate": 16000}
+      },
+      {
+        "type": "GaussianNoise",
+        "args": {"sigma": 0.005}
+      },
+      {
+        "type": "Gain",
+        "args": {}
       }
     ],
     "spectrogram": [
       {
         "type": "TimeStretching",
         "args": {"n_feat": 128}
+      },
+      {
+        "type": "FrequencyMasking",
+        "args": {}
+      },
+      {
+        "type": "TimeMasking",
+        "args": {}
       }
     ],
     "p": 0.05
@@ -163,7 +179,7 @@
     "early_stop": 100,
     "visualize": "wandb",
     "wandb_project": "asr_project",
-    "wandb_name": "all_data_decrease_ds",
+    "wandb_name": "decr_ds_with_augs",
     "len_epoch": 500,
     "log_step": 100,
     "beam_size": 30,

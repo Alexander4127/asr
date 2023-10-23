@@ -5,16 +5,16 @@ from torch import Tensor
 
 
 class RandomApply:
-    def __init__(self, augmentation: Optional[Callable], p: Optional[float]):
-        assert p is None or 0 <= p <= 1
+    def __init__(self, augmentation: Optional[Callable], p: float):
+        assert 0 <= p <= 1
         self.augmentation = augmentation
         self.p = p
 
-    def __call__(self, data: Tensor) -> Tuple[bool, Tensor]:
+    def __call__(self, data: Tensor) -> Tuple[str, Tensor]:
         if self.augmentation is None or random.random() > self.p:
-            return False, data
+            return '', data
         else:
-            return True, self.augmentation(data)
+            return repr(self.augmentation), self.augmentation(data)
 
     def __repr__(self):
-        return repr(self.augmentation)
+        return f'RandomApply({repr(self.augmentation)})'
