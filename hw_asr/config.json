@@ -29,14 +29,6 @@
       {
         "type": "TimeStretching",
         "args": {"n_feat": 128}
-      },
-      {
-        "type": "FrequencyMasking",
-        "args": {}
-      },
-      {
-        "type": "TimeMasking",
-        "args": {}
       }
     ],
     "p": 0.05
