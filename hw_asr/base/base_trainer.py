@@ -164,7 +164,7 @@ class BaseTrainer:
         self.logger.info("Loading checkpoint: {} ...".format(resume_path))
         checkpoint = torch.load(resume_path, self.device)
         self.start_epoch = checkpoint["epoch"] + 1
-        self.mnt_best = checkpoint["monitor_best"]
+        self.mnt_best = inf
 
         # load architecture params from checkpoint.
         if checkpoint["config"]["arch"] != self.config["arch"]:
