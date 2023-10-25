@@ -29,6 +29,7 @@ class CTCBPETextEncoder(CTCTextEncoder):
     UNK_TOK = "<unk>"
 
     def __init__(self, vocab_size: int = 2000, use_pretrained: bool = True):
+        super().__init__()
         self.tokenizer: Optional[Tokenizer] = None
         self.vocab_size = vocab_size
         self._tokenizer_path = str(ROOT_PATH / "hw_asr" / "text_encoder" / "tokenizer.json")
@@ -39,7 +40,8 @@ class CTCBPETextEncoder(CTCTextEncoder):
                 logger.warning(f'Using pretrained tokenizer with vocab_size = {self.vocab_size}.\n'
                                f'Ignoring vocab_size parameter.')
         os.environ["TOKENIZERS_PARALLELISM"] = "false"
-        super().__init__(self.tokenizer.get_vocab() if self.tokenizer is not None else None)
+        if self.tokenizer is not None:
+            self.update_vocab(self.tokenizer.get_vocab())
 
     def train_tokenizer(self, files: List[str]):
         initial_alphabet = [' '] + list(ascii_lowercase)
@@ -59,4 +61,4 @@ class CTCBPETextEncoder(CTCTextEncoder):
 
         self.tokenizer.train(files, trainer)
         self.tokenizer.save(self._tokenizer_path)
-        self.update_alphabet(self.tokenizer.get_vocab())
+        self.update_vocab(self.tokenizer.get_vocab())

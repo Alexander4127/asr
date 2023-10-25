@@ -24,9 +24,14 @@ class CTCTextEncoder(BaseTextEncoder):
         self.ind2char: Optional[Dict[int, str]] = None
         if alphabet is None:
             alphabet = list(ascii_lowercase + ' ')
-        self.update_alphabet(alphabet)
+        vocab = {v: k for k, v in enumerate(alphabet)}
+        self.update_vocab(vocab)
 
-    def update_alphabet(self, alphabet: List[str]):
+    def update_vocab(self, vocab: Dict[str, int]):
+        sorted_vocab = sorted(list(vocab.items()), key=lambda el: el[1])
+        alphabet, indices = [el[0] for el in sorted_vocab], [el[1] for el in sorted_vocab]
+        assert indices == list(range(len(vocab)))
+
         self.alphabet = alphabet
         self.ind2char = {k: v for k, v in enumerate(alphabet)}
         self.char2ind = {v: k for k, v in self.ind2char.items()}
