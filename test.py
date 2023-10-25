@@ -1,11 +1,15 @@
 import argparse
+from collections import defaultdict
 import json
 import os
 from pathlib import Path
 
+import numpy as np
+import pandas as pd
 import torch
 from tqdm import tqdm
 
+from hw_asr.metric.utils import calc_cer, calc_wer
 import hw_asr.model as module_model
 from hw_asr.trainer import Trainer
 from hw_asr.utils import ROOT_PATH
@@ -42,36 +46,61 @@ def main(config, out_file):
     model = model.to(device)
     model.eval()
 
-    results = []
+    results = defaultdict(list)
+    cer_results = defaultdict(lambda: defaultdict(list))
+    wer_results = defaultdict(lambda: defaultdict(list))
 
     with torch.no_grad():
-        for batch_num, batch in enumerate(tqdm(dataloaders["test"])):
-            batch = Trainer.move_batch_to_device(batch, device)
-            output = model(**batch)
-            if type(output) is dict:
-                batch.update(output)
-            else:
-                batch["logits"] = output
-            batch["log_probs"] = torch.log_softmax(batch["logits"], dim=-1)
-            batch["log_probs_length"] = model.transform_input_lengths(
-                batch["spectrogram_length"]
-            )
-            batch["probs"] = batch["log_probs"].exp().cpu()
-            batch["argmax"] = batch["probs"].argmax(-1)
-            for i in range(len(batch["text"])):
-                argmax = batch["argmax"][i]
-                argmax = argmax[: int(batch["log_probs_length"][i])]
-                results.append(
-                    {
-                        "ground_trurh": batch["text"][i],
-                        "pred_text_argmax": text_encoder.ctc_decode(argmax.cpu().numpy()),
-                        "pred_text_beam_search": text_encoder.ctc_beam_search(
-                            batch["probs"][i], batch["log_probs_length"][i], beam_size=100
-                        )[:10],
-                    }
+        for test_name in ["test_clean", "test_other"]:
+            for batch_num, batch in enumerate(tqdm(dataloaders[test_name])):
+                batch = Trainer.move_batch_to_device(batch, device)
+                output = model(**batch)
+                if type(output) is dict:
+                    batch.update(output)
+                else:
+                    batch["logits"] = output
+                batch["log_probs"] = torch.log_softmax(batch["logits"], dim=-1)
+                batch["log_probs_length"] = model.transform_input_lengths(
+                    batch["spectrogram_length"]
                 )
-    with Path(out_file).open("w") as f:
-        json.dump(results, f, indent=2)
+                batch["probs"] = batch["log_probs"].exp().cpu()
+                batch["argmax"] = batch["probs"].argmax(-1)
+                for i in range(len(batch["text"])):
+                    argmax = batch["argmax"][i]
+                    argmax = argmax[: int(batch["log_probs_length"][i])]
+                    results[test_name].append(
+                        {
+                            "ground_truth": batch["text"][i],
+                            "pred_text_argmax": text_encoder.ctc_decode(argmax.cpu().numpy()),
+                            "pred_text_beam_search": text_encoder.ctc_beam_search(
+                                batch["probs"][i], batch["log_probs_length"][i], beam_size=100
+                            )[:10],
+                            "pred_text_model_search": text_encoder.model_beam_search(
+                                batch["logits"][i], batch["log_probs_length"][i], beam_size=100
+                            )[:10]
+                        }
+                    )
+                    for algo in filter(lambda x: x.startswith('pred'), results[test_name][-1].keys()):
+                        gt = results[test_name][-1]["ground_truth"]
+                        pred = results[-1][algo]
+                        pred = pred if isinstance(pred, str) else pred[0][0]
+                        cer_results[test_name][algo].append(calc_cer(gt, pred))
+                        wer_results[test_name][algo].append(calc_wer(gt, pred))
+
+        with Path(out_file).open("w") as f:
+            json.dump(results, f, indent=2)
+
+    metrics_df = pd.DataFrame()
+    logger.info('\n\n    Final:')
+    for label, res in zip(['CER', 'WER'], [cer_results, wer_results]):
+        for test_name, metric in res.items():
+            logger.info(f'\n    {test_name} results:')
+            for algo, vals in metric.items():
+                algo_name = " ".join(algo.split("_")[2:])
+                logger.info(f'    {label} ({algo_name}): {np.mean(vals):.6f}')
+                metrics_df.loc[test_name, algo_name] = np.mean(vals)
+
+    metrics_df.to_csv(out_file.replace('.json', '.csv'))
 
 
 if __name__ == "__main__":

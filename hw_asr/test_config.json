@@ -1,0 +1,115 @@
+{
+  "name": "decr_ds",
+  "n_gpu": 1,
+  "preprocessing": {
+    "sr": 16000,
+    "spectrogram": {
+      "type": "MelSpectrogram",
+      "args": {
+      }
+    },
+    "log_spec": true
+  },
+  "text_encoder": {
+    "type": "CTCCharTextEncoder",
+    "args": {"lm_params": {}}
+  },
+  "arch": {
+    "type": "DeepSpeechModel",
+    "args": {
+      "n_feats": 128,
+      "conv_params": [
+        {
+          "in_channels": 1,
+          "out_channels": 32,
+          "kernel_size": [41, 11],
+          "stride": [2, 2]
+        },
+        {
+          "in_channels": 32,
+          "out_channels": 32,
+          "kernel_size": [21, 11],
+          "stride": [2, 1]
+        }
+      ],
+      "rnn_params": {
+        "num_rnn": 5,
+        "rnn_hid": 512,
+        "bi": true,
+        "bn": true
+      }
+    }
+  },
+    "data": {
+      "test-clean": {
+        "batch_size": 32,
+        "num_workers": 5,
+        "datasets": [
+          {
+            "type": "LibrispeechDataset",
+            "args": {
+              "part": "test-clean"
+            }
+          }
+        ]
+      },
+      "test-other": {
+        "batch_size": 32,
+        "num_workers": 5,
+        "datasets": [
+          {
+            "type": "LibrispeechDataset",
+            "args": {
+              "part": "test-other"
+            }
+          }
+        ]
+      }
+  },
+  "optimizer": {
+    "type": "Adam",
+    "args": {
+      "lr": 3e-4
+    }
+  },
+  "loss": {
+    "type": "CTCLoss",
+    "args": {}
+  },
+  "metrics": [
+    {
+      "type": "ArgmaxWERMetric",
+      "args": {
+        "name": "WER (argmax)"
+      }
+    },
+    {
+      "type": "ArgmaxCERMetric",
+      "args": {
+        "name": "CER (argmax)"
+      }
+    }
+  ],
+  "lr_scheduler": {
+    "type": "StepLR",
+    "args": {
+      "step_size": 1000,
+      "gamma": 0.98
+    }
+  },
+  "trainer": {
+    "epochs": 1000,
+    "save_dir": "saved/",
+    "save_period": 5,
+    "verbosity": 2,
+    "monitor": "min val_loss",
+    "early_stop": 100,
+    "visualize": "wandb",
+    "wandb_project": "asr_project",
+    "wandb_name": "all_data_decrease_ds",
+    "len_epoch": 500,
+    "log_step": 100,
+    "beam_size": 30,
+    "grad_norm_clip": 10
+  }
+}

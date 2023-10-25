@@ -1,10 +1,10 @@
-import logging
-from typing import List, NamedTuple, Dict, Any, Tuple
+from typing import List, NamedTuple, Dict, Any, Tuple, Optional
 from collections import defaultdict
 
 import torch
 
 from .char_text_encoder import CharTextEncoder
+from .lm import LMModel
 
 
 class Hypothesis(NamedTuple):
@@ -15,11 +15,13 @@ class Hypothesis(NamedTuple):
 class CTCCharTextEncoder(CharTextEncoder):
     EMPTY_TOK = "^"
 
-    def __init__(self, alphabet: List[str] = None):
+    def __init__(self, alphabet: List[str] = None, lm_params: Optional[Dict[str, Any]] = None):
         super().__init__(alphabet)
         vocab: List[str] = [self.EMPTY_TOK] + list(self.alphabet)
         self.ind2char = dict(enumerate(vocab))
         self.char2ind = {v: k for k, v in self.ind2char.items()}
+        self.lm_model: Optional[LMModel] = LMModel([''] + list(self.alphabet), **lm_params) \
+            if lm_params is not None else None
 
     def ctc_decode(self, inds: List[int]) -> str:
         result = []
@@ -63,5 +65,9 @@ class CTCCharTextEncoder(CharTextEncoder):
         for frame in probs:
             state = self._extend_and_merge(frame, state)
             state = self._truncate(state, beam_size)
-        hypos: List[Hypothesis] = [Hypothesis(k[0], v) for k, v in state.items()]
+        hypos: List[Hypothesis] = [Hypothesis(k[0], float(v)) for k, v in state.items()]
         return sorted(hypos, key=lambda x: x.prob, reverse=True)
+
+    def model_beam_search(self, logits: torch.Tensor, probs_length, beam_size: int = 100):
+        assert self.lm_model is not None
+        return self.lm_model.decode_beams(logits, probs_length, beam_size)
