@@ -15,6 +15,6 @@ class CTCCharTextEncoder(CTCTextEncoder):
         self.lm_model: Optional[LMModel] = LMModel([''] + list(self.alphabet), **lm_params) \
             if lm_params is not None else None
 
-    def model_beam_search(self, logits: torch.Tensor, probs_length, beam_size: int = 100):
+    def model_beam_search(self, logits: torch.Tensor, probs_length, pool, beam_size: int = 100):
         assert self.lm_model is not None
-        return self.lm_model.decode_beams(logits, probs_length, beam_size)
+        return self.lm_model.decode_beams(logits, probs_length, pool, beam_size)

@@ -35,10 +35,10 @@ class CTCBPETextEncoder(CTCTextEncoder):
         self._tokenizer_path = str(ROOT_PATH / "hw_asr" / "text_encoder" / "tokenizer.json")
         if use_pretrained and os.path.exists(self._tokenizer_path):
             self.tokenizer = Tokenizer.from_file(self._tokenizer_path)
+            self.vocab_size = self.tokenizer.get_vocab_size()
             if self.tokenizer.get_vocab_size() != vocab_size:
-                self.vocab_size = self.tokenizer.get_vocab_size()
-                logger.warning(f'Using pretrained tokenizer with vocab_size = {self.vocab_size}.\n'
-                               f'Ignoring vocab_size parameter.')
+                logger.warning(f'Pretrained tokenizer has different vocab_size = {self.vocab_size}. Ignoring it.')
+                self.tokenizer = None
         os.environ["TOKENIZERS_PARALLELISM"] = "false"
         if self.tokenizer is not None:
             self.update_vocab(self.tokenizer.get_vocab())
