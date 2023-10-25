@@ -78,7 +78,7 @@ class LMModel:
         with open(self._model_dir / upper_filename, 'r') as upper_model_file:
             with open(self._model_dir / model_filename, 'w') as model_file:
                 for line in upper_model_file:
-                    print(line.lower(), file=model_file)
+                    print(line.lower(), file=model_file, end='')
         return model_filename
 
     def _get_unigrams(self):
