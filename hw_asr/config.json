@@ -53,7 +53,7 @@
       ],
       "rnn_params": {
         "num_rnn": 5,
-        "rnn_hid": 64,
+        "rnn_hid": 512,
         "bi": true,
         "bn": true
       }
