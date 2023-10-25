@@ -1,5 +1,5 @@
 {
-  "name": "fine_tune_other",
+  "name": "bpe_encoder",
   "n_gpu": 1,
   "preprocessing": {
     "sr": 16000,
@@ -53,13 +53,17 @@
       ],
       "rnn_params": {
         "num_rnn": 5,
-        "rnn_hid": 512,
+        "rnn_hid": 64,
         "bi": true,
         "bn": true
       }
     }
   },
-    "data": {
+  "text_encoder": {
+    "type": "CTCBPETextEncoder",
+    "args": {}
+  },
+  "data": {
     "train": {
       "batch_size": 32,
       "num_workers": 5,
@@ -67,7 +71,15 @@
         {
           "type": "LibrispeechDataset",
           "args": {
-            "part": "train-other-500",
+            "part": "train-clean-100",
+            "max_audio_length": 20.0,
+            "max_text_length": 200
+          }
+        },
+        {
+          "type": "LibrispeechDataset",
+          "args": {
+            "part": "train-clean-360",
             "max_audio_length": 20.0,
             "max_text_length": 200
           }
@@ -81,7 +93,7 @@
         {
           "type": "LibrispeechDataset",
           "args": {
-            "part": "dev-other",
+            "part": "dev-clean",
             "limit": 1000
           }
         }
@@ -154,10 +166,9 @@
     "early_stop": 100,
     "visualize": "wandb",
     "wandb_project": "asr_project",
-    "wandb_name": "decr_ds_with_augs",
-    "len_epoch": 500,
-    "log_step": 100,
-    "beam_size": 30,
+    "wandb_name": "bpe_encoder_clean",
+    "len_epoch": 100,
+    "log_step": 20,
     "grad_norm_clip": 10
   }
 }

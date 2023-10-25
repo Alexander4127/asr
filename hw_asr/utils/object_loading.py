@@ -1,3 +1,4 @@
+import logging
 from operator import xor
 
 from torch.utils.data import ConcatDataset, DataLoader
@@ -6,8 +7,12 @@ import hw_asr.augmentations
 import hw_asr.datasets
 from hw_asr import batch_sampler as batch_sampler_module
 from hw_asr.base.base_text_encoder import BaseTextEncoder
+from hw_asr.text_encoder.ctc_bpe_encoder import CTCBPETextEncoder
 from hw_asr.collate_fn.collate import collate_fn
 from hw_asr.utils.parse_config import ConfigParser
+
+
+logger = logging.getLogger()
 
 
 def get_dataloaders(configs: ConfigParser, text_encoder: BaseTextEncoder):
@@ -29,6 +34,12 @@ def get_dataloaders(configs: ConfigParser, text_encoder: BaseTextEncoder):
             datasets.append(configs.init_obj(
                 ds, hw_asr.datasets, text_encoder=text_encoder, config_parser=configs,
                 wave_augs=wave_augs, spec_augs=spec_augs))
+
+        if isinstance(text_encoder, CTCBPETextEncoder) and text_encoder.tokenizer is None:
+            logging.info('Loading datasets and training tokenizer...')
+            lst_lists = [dataset.load_text_files() for dataset in datasets]
+            text_encoder.train_tokenizer([filename for lst in lst_lists for filename in lst])
+
         assert len(datasets)
         if len(datasets) > 1:
             dataset = ConcatDataset(datasets)

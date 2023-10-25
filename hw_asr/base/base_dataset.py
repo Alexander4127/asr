@@ -1,4 +1,6 @@
+import glob
 import logging
+from pathlib import Path
 import random
 from typing import List
 
@@ -89,6 +91,14 @@ class BaseDataset(Dataset):
             if self.log_spec:
                 audio_tensor_spec = torch.log(audio_tensor_spec + 1e-5)
             return wave_augments, spec_augments, audio_tensor_wave, audio_tensor_spec
+
+    def load_text_files(self) -> List[str]:
+        set_files = set()
+        for d_info in self._index:
+            dir_path = Path(d_info['path']).parent
+            for file in glob.glob(f'{str(dir_path)}/*.txt'):
+                set_files.add(file)
+        return list(set_files)
 
     @staticmethod
     def _filter_records_from_dataset(
