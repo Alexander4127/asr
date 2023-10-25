@@ -82,7 +82,7 @@ def main(config, out_file):
                     )
                     for algo in filter(lambda x: x.startswith('pred'), results[test_name][-1].keys()):
                         gt = results[test_name][-1]["ground_truth"]
-                        pred = results[-1][algo]
+                        pred = results[test_name][-1][algo]
                         pred = pred if isinstance(pred, str) else pred[0][0]
                         cer_results[test_name][algo].append(calc_cer(gt, pred))
                         wer_results[test_name][algo].append(calc_wer(gt, pred))
