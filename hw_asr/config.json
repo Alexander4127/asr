@@ -1,5 +1,5 @@
 {
-  "name": "bpe_encoder",
+  "name": "bpe_encoder_less_vocab",
   "n_gpu": 1,
   "preprocessing": {
     "sr": 16000,
@@ -166,7 +166,7 @@
     "early_stop": 100,
     "visualize": "wandb",
     "wandb_project": "asr_project",
-    "wandb_name": "bpe_encoder_clean",
+    "wandb_name": "bpe_encoder_clean_less_vocab",
     "len_epoch": 100,
     "log_step": 20,
     "grad_norm_clip": 10
