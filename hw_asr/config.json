@@ -61,7 +61,7 @@
   },
   "text_encoder": {
     "type": "CTCBPETextEncoder",
-    "args": {"vocab_size": 28}
+    "args": {"vocab_size": 100}
   },
   "data": {
     "train": {
