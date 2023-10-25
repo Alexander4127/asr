@@ -51,7 +51,7 @@ def main(config, out_file):
     wer_results = defaultdict(lambda: defaultdict(list))
 
     with torch.no_grad():
-        for test_name in ["test_clean", "test_other"]:
+        for test_name in ["test-clean", "test-other"]:
             for batch_num, batch in enumerate(tqdm(dataloaders[test_name])):
                 batch = Trainer.move_batch_to_device(batch, device)
                 output = model(**batch)
