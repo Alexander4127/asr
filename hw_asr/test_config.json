@@ -53,7 +53,8 @@
                 {
                     "type": "LibrispeechDataset",
                     "args": {
-                        "part": "test-clean"
+                        "part": "test-clean",
+                        "limit": 1000
                     }
                 }
             ]
@@ -68,5 +69,17 @@
                 }
             ]
         }
+    },
+    "trainer": {
+        "epochs": 100,
+        "save_dir": "saved/",
+        "save_period": 5,
+        "verbosity": 2,
+        "monitor": "min val_loss",
+        "early_stop": 100,
+        "len_epoch": 500,
+        "log_step": 100,
+        "beam_size": 30,
+        "grad_norm_clip": 10
     }
 }
