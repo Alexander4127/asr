@@ -41,26 +41,22 @@
     }
   },
     "data": {
-      "test-clean": {
-        "batch_size": 32,
-        "num_workers": 5,
-        "datasets": [
-          {
-            "type": "LibrispeechDataset",
-            "args": {
-              "part": "test-clean"
-            }
-          }
-        ]
-      },
       "test-other": {
-        "batch_size": 32,
-        "num_workers": 5,
         "datasets": [
           {
             "type": "LibrispeechDataset",
             "args": {
               "part": "test-other"
+            }
+          }
+        ]
+      },
+      "test-clean": {
+        "datasets": [
+          {
+            "type": "LibrispeechDataset",
+            "args": {
+              "part": "test-clean"
             }
           }
         ]

@@ -1,4 +1,5 @@
 import argparse
+import multiprocessing
 from collections import defaultdict
 import json
 import os
@@ -50,51 +51,61 @@ def main(config, out_file):
     cer_results = defaultdict(lambda: defaultdict(list))
     wer_results = defaultdict(lambda: defaultdict(list))
 
-    with torch.no_grad():
-        for test_name in ["test-clean", "test-other"]:
-            for batch_num, batch in enumerate(tqdm(dataloaders[test_name])):
-                batch = Trainer.move_batch_to_device(batch, device)
-                output = model(**batch)
-                if type(output) is dict:
-                    batch.update(output)
-                else:
-                    batch["logits"] = output
-                batch["log_probs"] = torch.log_softmax(batch["logits"], dim=-1)
-                batch["log_probs_length"] = model.transform_input_lengths(
-                    batch["spectrogram_length"]
-                )
-                batch["probs"] = batch["log_probs"].exp().cpu()
-                batch["argmax"] = batch["probs"].argmax(-1)
-                for i in range(len(batch["text"])):
-                    argmax = batch["argmax"][i]
-                    argmax = argmax[: int(batch["log_probs_length"][i])]
-                    results[test_name].append(
-                        {
-                            "ground_truth": batch["text"][i],
-                            "pred_text_argmax": text_encoder.ctc_decode(argmax.cpu().numpy()),
-                            "pred_text_beam_search": text_encoder.ctc_beam_search(
-                                batch["probs"][i], batch["log_probs_length"][i], beam_size=100
-                            )[:10],
-                            "pred_text_model_search": text_encoder.model_beam_search(
-                                batch["logits"][i], batch["log_probs_length"][i], beam_size=100
-                            )[:10]
-                        }
+    with multiprocessing.Pool(multiprocessing.cpu_count()) as pool:
+        with torch.no_grad():
+            for test_name in ["test-clean"]:
+                for batch_num, batch in enumerate(tqdm(dataloaders[test_name])):
+                    batch = Trainer.move_batch_to_device(batch, device)
+                    output = model(**batch)
+                    if type(output) is dict:
+                        batch.update(output)
+                    else:
+                        batch["logits"] = output
+                    batch["log_probs"] = torch.log_softmax(batch["logits"], dim=-1)
+                    batch["log_probs_length"] = model.transform_input_lengths(
+                        batch["spectrogram_length"]
                     )
-                    for algo in filter(lambda x: x.startswith('pred'), results[test_name][-1].keys()):
-                        gt = results[test_name][-1]["ground_truth"]
-                        pred = results[test_name][-1][algo]
-                        pred = pred if isinstance(pred, str) else pred[0][0]
-                        cer_results[test_name][algo].append(calc_cer(gt, pred))
-                        wer_results[test_name][algo].append(calc_wer(gt, pred))
+                    batch["probs"] = batch["log_probs"].exp().cpu()
+                    batch["argmax"] = batch["probs"].argmax(-1)
 
-        with Path(out_file).open("w") as f:
-            json.dump(results, f, indent=2)
+                    model_results = text_encoder.model_beam_search(
+                        batch["logits"], batch["log_probs_length"], pool=pool, beam_size=1000
+                    )
+                    for i in range(len(batch["text"])):
+                        argmax = batch["argmax"][i]
+                        argmax = argmax[: int(batch["log_probs_length"][i])]
+                        results[test_name].append(
+                            {
+                                "ground_truth": batch["text"][i],
+                                "pred_text_argmax": text_encoder.ctc_decode(argmax.cpu().numpy()),
+                                "pred_text_beam_search": text_encoder.ctc_beam_search(
+                                    batch["probs"][i], batch["log_probs_length"][i], beam_size=10
+                                )[:1],
+                                "pred_text_model_search": model_results[i]
+                            }
+                        )
+                        for algo in filter(lambda x: x.startswith('pred'), results[test_name][-1].keys()):
+                            gt = results[test_name][-1]["ground_truth"]
+                            pred = results[test_name][-1][algo]
+                            pred = pred if isinstance(pred, str) else pred[0][0]
+                            cer_results[test_name][algo].append(calc_cer(gt, pred))
+                            wer_results[test_name][algo].append(calc_wer(gt, pred))
+
+                    for label, res in zip(['CER', 'WER'], [cer_results, wer_results]):
+                        metric = res[test_name]
+                        logger.info(f'\n    {test_name} results:')
+                        for algo, vals in metric.items():
+                            algo_name = " ".join(algo.split("_")[2:])
+                            logger.info(f'    {label} ({algo_name}): {np.mean(vals):.6f}')
+
+                    with Path(f'test_checkpoints/{test_name}_{batch_num}_{out_file}').open("w") as f:
+                        json.dump(results, f, indent=2)
 
     metrics_df = pd.DataFrame()
-    logger.info('\n\n    Final:')
-    for label, res in zip(['CER', 'WER'], [cer_results, wer_results]):
-        for test_name, metric in res.items():
-            logger.info(f'\n    {test_name} results:')
+    logger.info('\n\n\n    Final:')
+    for test_name in results.keys():
+        logger.info(f'\n\n    {test_name} results:')
+        for label, metric in zip(['CER', 'WER'], [cer_results[test_name], wer_results[test_name]]):
             for algo, vals in metric.items():
                 algo_name = " ".join(algo.split("_")[2:])
                 logger.info(f'    {label} ({algo_name}): {np.mean(vals):.6f}')
@@ -150,7 +161,7 @@ if __name__ == "__main__":
     args.add_argument(
         "-j",
         "--jobs",
-        default=1,
+        default=5,
         type=int,
         help="Number of workers for test dataloader",
     )
@@ -194,8 +205,7 @@ if __name__ == "__main__":
             }
         }
 
-    assert "test-clean" in config["data"] and "test-other" in config["data"]
-    for test_name in config["data"].keys():
+    for test_name in filter(lambda name: name.startswith("test"), config["data"].keys()):
         config["data"][test_name]["batch_size"] = args.batch_size
         config["data"][test_name]["n_jobs"] = args.jobs
 

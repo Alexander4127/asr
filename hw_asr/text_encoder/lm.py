@@ -90,6 +90,6 @@ class LMModel:
         logger.info(f'{unigrams[0], unigrams[-1]}')
         return unigrams
 
-    def decode_beams(self, logits: torch.Tensor, probs_length, beam_size: int):
-        decoded = self._decoder.decode_beams(logits[:probs_length].cpu().numpy(), beam_width=beam_size)
-        return [LMHypot(beam[0], beam[-2], beam[-1]) for beam in decoded]
+    def decode_beams(self, logits: torch.Tensor, probs_lengths, pool, beam_size: int):
+        batch_probs = [logit[:length].cpu().numpy() for logit, length in zip(logits, probs_lengths)]
+        return self._decoder.decode_batch(pool, batch_probs, beam_width=beam_size)
