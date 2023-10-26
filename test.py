@@ -69,7 +69,7 @@ def main(config, out_file):
                     batch["argmax"] = batch["probs"].argmax(-1)
 
                     model_results = text_encoder.model_beam_search(
-                        batch["logits"], batch["log_probs_length"], pool=pool, beam_size=1000
+                        batch["logits"], batch["log_probs_length"], pool=pool, beam_size=5000
                     )
                     for i in range(len(batch["text"])):
                         argmax = batch["argmax"][i]

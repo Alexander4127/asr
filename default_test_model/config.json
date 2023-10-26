@@ -11,7 +11,11 @@
     },
     "text_encoder": {
         "type": "CTCCharTextEncoder",
-        "args": {"lm_params": {}}
+        "args": {
+            "lm_params": {
+                "is_pruned": false
+            }
+        }
     },
     "arch": {
         "type": "DeepSpeechModel",
