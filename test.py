@@ -53,7 +53,7 @@ def main(config, out_file):
 
     with multiprocessing.Pool(multiprocessing.cpu_count()) as pool:
         with torch.no_grad():
-            for test_name in ["test-clean"]:
+            for test_name in ["test-other", "test-clean"]:
                 for batch_num, batch in enumerate(tqdm(dataloaders[test_name])):
                     batch = Trainer.move_batch_to_device(batch, device)
                     output = model(**batch)
