@@ -52,22 +52,22 @@
         }
     },
     "data": {
-        "test-clean": {
-            "datasets": [
-                {
-                    "type": "LibrispeechDataset",
-                    "args": {
-                        "part": "test-clean"
-                    }
-                }
-            ]
-        },
         "test-other": {
             "datasets": [
                 {
                     "type": "LibrispeechDataset",
                     "args": {
                         "part": "test-other"
+                    }
+                }
+            ]
+        },
+        "test-clean": {
+            "datasets": [
+                {
+                    "type": "LibrispeechDataset",
+                    "args": {
+                        "part": "test-clean"
                     }
                 }
             ]
