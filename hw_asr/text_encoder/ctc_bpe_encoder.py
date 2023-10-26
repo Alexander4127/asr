@@ -43,6 +43,9 @@ class CTCBPETextEncoder(CTCTextEncoder):
         if self.tokenizer is not None:
             self.update_vocab(self.tokenizer.get_vocab())
 
+    def encode(self, text) -> torch.Tensor:
+        return torch.tensor(self.tokenizer.encode(text).ids).unsqueeze(0)
+
     def train_tokenizer(self, files: List[str]):
         initial_alphabet = [' '] + list(ascii_lowercase)
         self.tokenizer = Tokenizer(BPE(unk_token=self.UNK_TOK))

@@ -16,7 +16,8 @@ ROOT_PATH = Path(__file__).absolute().resolve().parent.parent.parent
 VOCAB_DIR = ROOT_PATH / "data" / "datasets" / "librispeech" / "vocab"
 VOCAB_LINK = "https://www.openslr.org/resources/11/librispeech-vocab.txt"
 MODEL_DIR = ROOT_PATH / "hw_asr" / "text_encoder"
-MODEL_LINK = "http://www.openslr.org/resources/11/3-gram.pruned.1e-7.arpa.gz"
+MODEL_LINK_PRUNED = "http://www.openslr.org/resources/11/3-gram.pruned.1e-7.arpa.gz"
+MODEL_LINK = "http://www.openslr.org/resources/11/3-gram.arpa.gz"
 
 
 logger = logging.getLogger()
@@ -34,11 +35,11 @@ class LMModel:
                  vocab_dir: Path = VOCAB_DIR,
                  vocab_link: str = VOCAB_LINK,
                  model_dir: Path = MODEL_DIR,
-                 model_link: str = MODEL_LINK):
+                 is_pruned: bool = False):
         self._dir: Path = vocab_dir
         self._model_dir: Path = model_dir
         self._filename = self._load_vocab(vocab_link)
-        self._model_filename = self._load_model(model_link)
+        self._model_filename = self._load_model(MODEL_LINK_PRUNED if is_pruned else MODEL_LINK)
 
         unigrams = self._get_unigrams()
         ken_lm_path = str(self._model_dir / self._model_filename)

@@ -11,7 +11,11 @@
     },
     "text_encoder": {
         "type": "CTCCharTextEncoder",
-        "args": {"lm_params": {}}
+        "args": {
+            "lm_params": {
+                "is_pruned": false
+            }
+        }
     },
     "arch": {
         "type": "DeepSpeechModel",
@@ -52,22 +56,22 @@
         }
     },
     "data": {
-        "test-clean": {
-            "datasets": [
-                {
-                    "type": "LibrispeechDataset",
-                    "args": {
-                        "part": "test-clean"
-                    }
-                }
-            ]
-        },
         "test-other": {
             "datasets": [
                 {
                     "type": "LibrispeechDataset",
                     "args": {
                         "part": "test-other"
+                    }
+                }
+            ]
+        },
+        "test-clean": {
+            "datasets": [
+                {
+                    "type": "LibrispeechDataset",
+                    "args": {
+                        "part": "test-clean"
                     }
                 }
             ]

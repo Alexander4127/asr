@@ -38,7 +38,7 @@ mv train-clean-100.tar.gz data/datasets/librispeech
 To download checkpoint of pretrained model, execute the following python code from repository root
 ```python3
 import gdown
-gdown.download("https://drive.google.com/uc?id=1au11O0p-orSg8h31gEQP5lRQ1Vk0GrSI", "default_test_model/checkpoint.pth")
+gdown.download("https://drive.google.com/uc?id=1kcVtCbofoos7JfTzazdXGYyPVibngjPk", "default_test_model/checkpoint.pth")
 ```
 
 It loads model parameters to directory `default_test_model`, where evaluation config is located.
@@ -94,12 +94,16 @@ Model evaluation supports `beam search` and `argmax` algorithms to
 find the most possible output sequences.
 In addition, inference stage equipped by pretrained language model, which significantly boosts Word Error Rate metrics
 
-                    arg max   | beam_search  | model_search
-    test-clean  	0.162679  |    0.160069  |    0.107235
-    test-other  	0.361537  |    0.358296  |    0.263807
+                    arg max   | beam_search  | model_pruned | model_full
+    test-clean  	0.162679  |    0.160069  |    0.107235  | 0.100930
+    test-other  	0.361537  |    0.358296  |    0.263807  | 0.252485
 
 This model works with output logits and evaluates beam search with 
-modified scores, including prior knowledge of text structure.
+modified scores, including prior knowledge of text structure. Pruned and full version 
+have insignificant changes in working time, nevertheless, downloading the bigger one
+takes much more time (here the trick from dataset loading can be applied).
+
+To select pruned model, specify `is_pruned = false` in `config.json`.
 
 #### Another tokenizer
 
