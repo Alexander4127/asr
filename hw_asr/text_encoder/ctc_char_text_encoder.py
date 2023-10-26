@@ -1,9 +1,13 @@
+import logging
 from typing import List, Dict, Any, Optional
 
 import torch
 
 from .ctc_text_encoder import CTCTextEncoder
 from .lm import LMModel
+
+
+logger = logging.getLogger()
 
 
 class CTCCharTextEncoder(CTCTextEncoder):
@@ -16,5 +20,7 @@ class CTCCharTextEncoder(CTCTextEncoder):
             if lm_params is not None else None
 
     def model_beam_search(self, logits: torch.Tensor, probs_length, pool, beam_size: int = 100):
-        assert self.lm_model is not None
+        if self.lm_model is None:
+            logger.warning("Cannot use LM. To remove this warning delete model_beam_search call from test.py")
+            return [""] * len(logits)
         return self.lm_model.decode_beams(logits, probs_length, pool, beam_size)

@@ -53,8 +53,8 @@ def main(config, out_file):
 
     with multiprocessing.Pool(multiprocessing.cpu_count()) as pool:
         with torch.no_grad():
-            for test_name in ["test-other", "test-clean"]:
-                for batch_num, batch in enumerate(tqdm(dataloaders[test_name])):
+            for test_name in filter(lambda name: name.startswith("test"), dataloaders.keys()):
+                for batch_num, batch in enumerate(tqdm(dataloaders[test_name], desc=test_name)):
                     batch = Trainer.move_batch_to_device(batch, device)
                     output = model(**batch)
                     if type(output) is dict:
@@ -91,15 +91,9 @@ def main(config, out_file):
                             cer_results[test_name][algo].append(calc_cer(gt, pred))
                             wer_results[test_name][algo].append(calc_wer(gt, pred))
 
-                    for label, res in zip(['CER', 'WER'], [cer_results, wer_results]):
-                        metric = res[test_name]
-                        logger.info(f'\n    {test_name} results:')
-                        for algo, vals in metric.items():
-                            algo_name = " ".join(algo.split("_")[2:])
-                            logger.info(f'    {label} ({algo_name}): {np.mean(vals):.6f}')
-
-                    with Path(f'test_checkpoints/{test_name}_{batch_num}_{out_file}').open("w") as f:
-                        json.dump(results, f, indent=2)
+    logger.info(f'    Saving output in {out_file}')
+    with Path(out_file).open("w") as f:
+        json.dump(results, f, indent=2)
 
     metrics_df = pd.DataFrame()
     logger.info('\n\n\n    Final:')
@@ -111,7 +105,8 @@ def main(config, out_file):
                 logger.info(f'    {label} ({algo_name}): {np.mean(vals):.6f}')
                 metrics_df.loc[test_name, algo_name] = np.mean(vals)
 
-    metrics_df.to_csv(out_file.replace('.json', '.csv'))
+    logger.info(f'    Saving metrics in {out_file.split(".")[0] + ".csv"}')
+    metrics_df.to_csv(out_file.split('.')[0] + '.csv')
 
 
 if __name__ == "__main__":
