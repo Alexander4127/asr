@@ -61,11 +61,13 @@ def main(config):
         metrics,
         optimizer,
         text_encoder=text_encoder,
+        beam_size=config["trainer"].get("beam_size", None),
         config=config,
         device=device,
         dataloaders=dataloaders,
         lr_scheduler=lr_scheduler,
-        len_epoch=config["trainer"].get("len_epoch", None)
+        len_epoch=config["trainer"].get("len_epoch", None),
+        log_step=config["trainer"].get("log_step", 50)
     )
 
     trainer.train()

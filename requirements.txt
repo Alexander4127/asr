@@ -1,6 +1,6 @@
 torch==1.11.0
 torchvision==0.12.0
-numpy
+numpy==1.24.3
 tqdm
 tensorboard
 matplotlib
@@ -8,9 +8,13 @@ pandas
 
 speechbrain~=0.5.12
 datasets
+gdown
 torch_audiomentations
 editdistance
 wandb
+kenlm
+wget
+tokenizers
 pyctcdecode
 torchaudio~=0.11.0
 pillow
