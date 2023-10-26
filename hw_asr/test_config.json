@@ -9,6 +9,10 @@
         },
         "log_spec": true
     },
+    "text_encoder": {
+        "type": "CTCCharTextEncoder",
+        "args": {"lm_params": {}}
+    },
     "arch": {
         "type": "DeepSpeechModel",
         "args": {
